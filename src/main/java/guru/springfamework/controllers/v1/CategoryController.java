@@ -9,11 +9,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Created by jt on 9/26/17.
  */
-@Controller
+@RestController
 @RequestMapping(CategoryController.BASE_URL)
 public class CategoryController {
 
@@ -26,16 +28,14 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<CategoryListDTO> getallCatetories(){
-
-        return new ResponseEntity<CategoryListDTO>(
-                new CategoryListDTO(categoryService.getAllCategories()), HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    public CategoryListDTO getallCatetories(){
+        return new CategoryListDTO(categoryService.getAllCategories());
     }
 
     @GetMapping("{name}")
-    public ResponseEntity<CategoryDTO> getCategoryByName( @PathVariable String name){
-        return new ResponseEntity<CategoryDTO>(
-                categoryService.getCategoryByName(name), HttpStatus.OK
-        );
+    @ResponseStatus(HttpStatus.OK)
+    public CategoryDTO getCategoryByName(@PathVariable String name){
+        return categoryService.getCategoryByName(name);
     }
 }
