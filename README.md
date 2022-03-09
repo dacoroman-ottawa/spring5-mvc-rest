@@ -12,6 +12,10 @@ docker pull arm64v8/mariadb
 docker run --name bn-mariadb -e MARIADB_ROOT_PASSWORD=my-secret-pw -d -p 3306:3306 -v /Users/bogdanneagu/mariadb/datadir:/var/lib/mysql arm64v8/mariadb:latest
 
 
+# Fruit Shop API
+https://api.predic8.de/shop/docs
+
+
 ## Use to run mysql db docker image, optional if you're not using a local mysqldb
 # docker run --name mysqldb -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -d mysql
 
