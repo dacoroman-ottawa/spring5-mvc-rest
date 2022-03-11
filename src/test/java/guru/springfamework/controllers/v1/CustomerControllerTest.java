@@ -56,11 +56,11 @@ public class CustomerControllerTest extends AbstractRestControllerTest {
         CustomerDTO customer2 = new CustomerDTO();
         customer2.setFirstname("Sam");
         customer2.setLastname("Axe");
-        customer2.setCustomerUrl("/api/v1/customer/2");
+        customer2.setCustomerUrl(CustomerController.BASE_URL + "/2");
 
         when(customerService.getAllCustomers()).thenReturn(Arrays.asList(customer1, customer2));
 
-        mockMvc.perform(get("/api/v1/customers/")
+        mockMvc.perform(get(CustomerController.BASE_URL)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.customers", hasSize(2)));
