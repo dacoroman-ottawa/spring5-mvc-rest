@@ -97,15 +97,6 @@ public class VendorServiceImplTest {
 
     }
 
-    @Test
-    public void deleteVendorById() throws Exception {
-
-        Long id = 1L;
-
-        vendorService.deleteVendorById(id);
-
-        verify(vendorRepository, times(1)).deleteById(anyLong());
-    }
 
     @Test
     public void saveVendorByDTO() throws Exception {
@@ -126,6 +117,17 @@ public class VendorServiceImplTest {
         //then
         assertEquals(vendorDTO.getName(), savedDto.getName());
         assertEquals(VendorController.BASE_URL + "/1", savedDto.getVendorUrl());
+    }
+
+
+    @Test
+    public void deleteVendorById() throws Exception {
+
+        Long id = 1L;
+
+        vendorService.deleteVendorById(id);
+
+        verify(vendorRepository, times(1)).deleteById(anyLong());
     }
     
 }
