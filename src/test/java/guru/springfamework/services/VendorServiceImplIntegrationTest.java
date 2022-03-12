@@ -76,7 +76,7 @@ public class VendorServiceImplIntegrationTest {
         VendorDTO vendorDTO = new VendorDTO();
         vendorDTO.setName(updatedName);
 
-        vendorService.patchVendorByDto(id, vendorDTO);
+        vendorService.patchVendorByDTO(id, vendorDTO);
 
         Vendor updatedVendor = vendorRepository.findById(id).get();
 

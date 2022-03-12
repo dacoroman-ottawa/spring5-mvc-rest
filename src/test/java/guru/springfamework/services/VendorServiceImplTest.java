@@ -1,32 +1,40 @@
 package guru.springfamework.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.List;
-
+import guru.springfamework.api.v1.mapper.VendorMapper;
+import guru.springfamework.api.v1.model.VendorDTO;
+import guru.springfamework.api.v1.model.VendorListDTO;
+import guru.springfamework.domain.Vendor;
+import guru.springfamework.repositories.VendorRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import guru.springfamework.api.v1.mapper.VendorMapper;
-import guru.springfamework.api.v1.model.VendorDTO;
-import guru.springfamework.controllers.v1.VendorController;
-import guru.springfamework.domain.Vendor;
-import guru.springfamework.repositories.VendorRepository;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsEqual.equalTo;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 public class VendorServiceImplTest {
 
+    public static final String NAME_1 = "My Vendor";
+    public static final long ID_1 = 1L;
+    public static final String NAME_2 = "My Vendor";
+    public static final long ID_2 = 1L;
+
     @Mock
     VendorRepository vendorRepository;
-
-    VendorMapper vendorMapper = VendorMapper.INSTANCE;
 
     VendorService vendorService;
 
@@ -34,100 +42,140 @@ public class VendorServiceImplTest {
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
 
-        vendorService = new VendorServiceImpl(vendorMapper, vendorRepository);
+        vendorService = new VendorServiceImpl(VendorMapper.INSTANCE, vendorRepository);
+    }
+
+    @Test
+    public void getVendorById() throws Exception {
+        //given
+        Vendor vendor = getVendor1();
+
+        //mockito BDD syntax (Behaviour Driven Development)
+        given(vendorRepository.findById(anyLong())).willReturn(Optional.of(vendor));
+
+        //when
+        VendorDTO vendorDTO = vendorService.getVendorById(1L);
+
+        //then
+        then(vendorRepository).should(times(1)).findById(anyLong());
+
+        //JUnit Assert that with matchers
+        assertThat(vendorDTO.getName(), is(equalTo(NAME_1)));
+    }
+
+
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void getVendorByIdNotFound() throws Exception {
+        //given
+        //mockito BBD syntax since mockito 1.10.0
+        given(vendorRepository.findById(anyLong())).willReturn(Optional.empty());
+
+        //when
+        VendorDTO vendorDTO = vendorService.getVendorById(1L);
+
+        //then
+        then(vendorRepository).should(times(1)).findById(anyLong());
 
     }
 
     @Test
     public void getAllVendors() throws Exception {
-
-        Vendor vendor1 = new Vendor();
-        vendor1.setId(1L);
-        vendor1.setName("Loblaws");
-
-        Vendor vendor2 = new Vendor();
-        vendor2.setId(2L);
-        vendor2.setName("Metro");
-
-        when(vendorRepository.findAll()).thenReturn(Arrays.asList(vendor1, vendor2));
+        //given
+        List<Vendor> vendors = Arrays.asList(getVendor1(), getVendor2());
+        given(vendorRepository.findAll()).willReturn(vendors);
 
         //when
-        List<VendorDTO> vendorDTOS = vendorService.getAllVendors();
+        VendorListDTO vendorListDTO = vendorService.getAllVendors();
 
         //then
-        assertEquals(2, vendorDTOS.size());
-
-    }
-
-    @Test
-    public void getVendorById() throws Exception {
-
-        Vendor vendor1 = new Vendor();
-        vendor1.setId(1L);
-        vendor1.setName("Loblaws");
-
-        when(vendorRepository.findById(anyLong())).thenReturn(java.util.Optional.ofNullable(vendor1));
-
-        //when
-        VendorDTO vendorDTO = vendorService.getVendorById(1L);
-
-        assertEquals("Loblaws", vendorDTO.getName());
-
+        then(vendorRepository).should(times(1)).findAll();
+        assertThat(vendorListDTO.getVendors().size(), is(equalTo(2)));
     }
 
     @Test
     public void createNewVendor() throws Exception {
-
         //given
         VendorDTO vendorDTO = new VendorDTO();
-        vendorDTO.setName("Metro");
+        vendorDTO.setName(NAME_1);
 
-        Vendor savedVendor = new Vendor();
-        savedVendor.setName(vendorDTO.getName());
-        savedVendor.setId(1l);
+        Vendor vendor = getVendor1();
 
-        when(vendorRepository.save(any(Vendor.class))).thenReturn(savedVendor);
+        given(vendorRepository.save(any(Vendor.class))).willReturn(vendor);
 
         //when
-        VendorDTO savedDto = vendorService.createNewVendor(vendorDTO);
+        VendorDTO savedVendorDTO = vendorService.createNewVendor(vendorDTO);
 
         //then
-        assertEquals(vendorDTO.getName(), savedDto.getName());
-        assertEquals(VendorController.BASE_URL + "/1", savedDto.getVendorUrl());
+        // 'should' defaults to times = 1
+        then(vendorRepository).should().save(any(Vendor.class));
+        assertThat(savedVendorDTO.getVendorUrl(), containsString("1"));
 
     }
-
 
     @Test
     public void saveVendorByDTO() throws Exception {
 
         //given
         VendorDTO vendorDTO = new VendorDTO();
-        vendorDTO.setName("Metro");
+        vendorDTO.setName(NAME_1);
 
-        Vendor savedVendor = new Vendor();
-        savedVendor.setName(vendorDTO.getName());
-        savedVendor.setId(1l);
+        Vendor vendor = getVendor1();
 
-        when(vendorRepository.save(any(Vendor.class))).thenReturn(savedVendor);
+        given(vendorRepository.save(any(Vendor.class))).willReturn(vendor);
 
         //when
-        VendorDTO savedDto = vendorService.saveVendorByDto(1L, vendorDTO);
+        VendorDTO savedVendorDTO = vendorService.saveVendorByDTO(ID_1, vendorDTO);
 
         //then
-        assertEquals(vendorDTO.getName(), savedDto.getName());
-        assertEquals(VendorController.BASE_URL + "/1", savedDto.getVendorUrl());
+        // 'should' defaults to times = 1
+        then(vendorRepository).should().save(any(Vendor.class));
+        assertThat(savedVendorDTO.getVendorUrl(), containsString("1"));
     }
 
+    @Test
+    public void patchVendor() throws Exception {
+        //given
+        VendorDTO vendorDTO = new VendorDTO();
+        vendorDTO.setName(NAME_1);
+
+        Vendor vendor = getVendor1();
+
+        given(vendorRepository.findById(anyLong())).willReturn(Optional.of(vendor));
+        given(vendorRepository.save(any(Vendor.class))).willReturn(vendor);
+
+        //when
+
+        VendorDTO savedVendorDTO = vendorService.patchVendorByDTO(ID_1, vendorDTO);
+
+        //then
+        // 'should' defaults to times = 1
+        then(vendorRepository).should().save(any(Vendor.class));
+        then(vendorRepository).should(times(1)).findById(anyLong());
+        assertThat(savedVendorDTO.getVendorUrl(), containsString("1"));
+    }
 
     @Test
     public void deleteVendorById() throws Exception {
 
-        Long id = 1L;
+        //when
+        vendorService.deleteVendorById(1L);
 
-        vendorService.deleteVendorById(id);
-
-        verify(vendorRepository, times(1)).deleteById(anyLong());
+        //then
+        then(vendorRepository).should().deleteById(anyLong());
     }
-    
+
+    private Vendor getVendor1() {
+        Vendor vendor = new Vendor();
+        vendor.setName(NAME_1);
+        vendor.setId(ID_1);
+        return vendor;
+    }
+
+    private Vendor getVendor2() {
+        Vendor vendor = new Vendor();
+        vendor.setName(NAME_2);
+        vendor.setId(ID_2);
+        return vendor;
+    }
 }
